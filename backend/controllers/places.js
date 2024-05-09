@@ -19,9 +19,15 @@ router.post('/', async (req, res) => {
 
 
 router.get('/', async (req, res) => {
-    const places = await Place.findAll()
-    res.json(places)
-})
+    try {
+        const places = await Place.findAll();
+        res.json(places);
+    } catch (error) {
+        console.error('Error fetching places:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
 
 
 router.get('/:placeId', async (req, res) => {
