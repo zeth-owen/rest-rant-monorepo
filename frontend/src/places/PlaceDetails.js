@@ -1,50 +1,51 @@
 import { useEffect, useState } from "react";
-import { useHistory, useParams } from "react-router"
-import CommentCard from './CommentCard'
+import { useHistory, useParams } from "react-router";
+import CommentCard from './CommentCard';
 import NewCommentForm from "./NewCommentForm";
+import { CurrentUser } from '../contexts/CurrentUser';
 
 function PlaceDetails() {
 
-	const { placeId } = useParams()
+	const { placeId } = useParams();
 
-	const history = useHistory()
+	const history = useHistory();
 
-	const [place, setPlace] = useState(null)
+	const [place, setPlace] = useState(null);
 
 	useEffect(() => {
 		const fetchData = async () => {
-			const response = await fetch(`http://localhost:5000/places/${placeId}`)
-			const resData = await response.json()
-			setPlace(resData)
-		}
-		fetchData()
-	}, [placeId])
+			const response = await fetch(`http://localhost:5000/places/${placeId}`);
+			const resData = await response.json();
+			setPlace(resData);
+		};
+		fetchData();
+	}, [placeId]);
 
 	if (place === null) {
-		return <h1>Loading</h1>
+		return <h1>Loading</h1>;
 	}
 
 	function editPlace() {
-		history.push(`/places/${place.placeId}/edit`)
+		history.push(`/places/${place.placeId}/edit`);
 	}
 
 	async function deletePlace() {
 		await fetch(`http://localhost:5000/places/${place.placeId}`, {
 			method: 'DELETE'
-		})
-		history.push('/places')
+		});
+		history.push('/places');
 	}
 
 	async function deleteComment(deletedComment) {
 		await fetch(`http://localhost:5000/places/${place.placeId}/comments/${deletedComment.commentId}`, {
 			method: 'DELETE'
-		})
+		});
 
 		setPlace({
 			...place,
 			comments: place.comments
 				.filter(comment => comment.commentId !== deletedComment.commentId)
-		})
+		});
 	}
 
 	async function createComment(commentAttributes) {
@@ -54,9 +55,9 @@ function PlaceDetails() {
 				'Content-Type': 'application/json'
 			},
 			body: JSON.stringify(commentAttributes)
-		})
+		});
 
-		const comment = await response.json()
+		const comment = await response.json();
 
 		setPlace({
 			...place,
@@ -64,43 +65,55 @@ function PlaceDetails() {
 				...place.comments,
 				comment
 			]
-		})
+		});
 
 	}
-
-
 
 	let comments = (
 		<h3 className="inactive">
 			No comments yet!
 		</h3>
-	)
+	);
 	let rating = (
 		<h3 className="inactive">
 			Not yet rated
 		</h3>
-	)
+	);
 	if (place.comments.length) {
 		let sumRatings = place.comments.reduce((tot, c) => {
-			return tot + c.stars
-		}, 0)
-		let averageRating = Math.round(sumRatings / place.comments.length)
-		let stars = ''
+			return tot + c.stars;
+		}, 0);
+		let averageRating = Math.round(sumRatings / place.comments.length);
+		let stars = '';
 		for (let i = 0; i < averageRating; i++) {
-			stars += '⭐️'
+			stars += '⭐️';
 		}
 		rating = (
 			<h3>
 				{stars} stars
 			</h3>
-		)
+		);
 		comments = place.comments.map(comment => {
 			return (
 				<CommentCard key={comment.commentId} comment={comment} onDelete={() => deleteComment(comment)} />
-			)
-		})
+			);
+		});
 	}
 
+	let placeActions = null;
+
+	if (CurrentUser?.role === 'admin') {
+		placeActions = (
+			<>
+				<a className="btn btn-warning" onClick={editPlace}>
+					Edit
+				</a>
+				<button type="submit" className="btn btn-danger" onClick={deletePlace}>
+					Delete
+				</button>
+			</>
+		);
+	}
 
 	return (
 		<main>
@@ -128,9 +141,7 @@ function PlaceDetails() {
 						Serving {place.cuisines}.
 					</h4>
 					<br />
-					<a className="btn btn-warning" onClick={editPlace}>
-						Edit
-					</a>{` `}
+					{placeActions}
 					<button type="submit" className="btn btn-danger" onClick={deletePlace}>
 						Delete
 					</button>
@@ -148,7 +159,13 @@ function PlaceDetails() {
 				onSubmit={createComment}
 			/>
 		</main>
-	)
+	);
 }
 
-export default PlaceDetails
+export default PlaceDetails;
+
+
+
+
+
+
